@@ -43,7 +43,7 @@ void SpreadSheet::addColumn(const QString& title)
 void SpreadSheet::copyCells()
 {
    clipboard.clear();
-   QItemSelectionModel * selection = selectionModel();
+   QItemSelectionModel* selection = selectionModel();
    QModelIndexList indexes = selection->selectedIndexes();
    std::sort(indexes.begin(), indexes.end());
 
@@ -63,7 +63,7 @@ void SpreadSheet::copyCells()
       previous = current;
    }
 
-   temp<<model()->data(previous).toString();
+   temp << model()->data(previous).toString();
    clipboard.push_back(temp);
 }
 
@@ -75,7 +75,27 @@ void SpreadSheet::cutCells()
 
 void SpreadSheet::pasteCells()
 {
+   QStringList temp;
+   int row = currentPasteRow();
 
+   if (row ==-1)
+   {
+      return;
+   }
+
+   int col = currentPasteCol();
+   int j = row;
+
+   foreach (temp, clipboard)
+   {
+      for (int x = 0; x < temp.count(); ++x)
+      {
+         QTableWidgetItem* newItem = new QTableWidgetItem(temp.at(x));
+         setItem(j, x + col, newItem);
+      }
+      temp.clear();
+      ++j;
+   }
 }
 
 void SpreadSheet::deleteCells()
@@ -87,7 +107,7 @@ void SpreadSheet::deleteCells()
    }
 }
 
-void SpreadSheet::SpreadSheet::keyPressEvent(QKeyEvent* event)
+void SpreadSheet::keyPressEvent(QKeyEvent* event)
 {
    if(event->matches(QKeySequence::Copy))
       copyCells();
@@ -101,4 +121,18 @@ void SpreadSheet::SpreadSheet::keyPressEvent(QKeyEvent* event)
       deleteCells();
    else
       QTableWidget::keyPressEvent(event);
+}
+
+int SpreadSheet::currentPasteRow()
+{
+   if (selectedRanges().length()>1)
+      return -1;
+   return selectedRanges().at(0).topRow();
+}
+
+int SpreadSheet::currentPasteCol()
+{
+   if (selectedRanges().length()>1)
+      return -1;
+   return selectedRanges().at(0).leftColumn();
 }
